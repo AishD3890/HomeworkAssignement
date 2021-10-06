@@ -1,0 +1,122 @@
+plugins {
+    id 'org.springframework.boot' version '2.2.7.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+    id 'java'
+    id 'jacoco'
+    id 'maven-publish'
+    id 'org.sonarqube' version '2.8'
+}
+group = 'com.aishu.homework'
+version = '1.0.0'
+sourceCompatibility = '1.8'
+archivesBaseName = 'aishwarya_warehouse'
+configurations {
+    [apiElements, runtimeElements].each {
+        it.outgoing.artifacts.removeIf { it.buildDependencies.getDependencies(null).contains(jar) }
+        it.outgoing.artifact(bootJar)
+    }
+} // needed for publishing artifacts with maven-publish
+ext['tomcat.version'] = '9.0.40'
+repositories {
+    // define here the location, from where we will download the Ikano specific libs
+mavenLocal()
+    maven {
+        url "https://artifacts.le.tnt.bank.ikano/repository/maven-ikano"
+        credentials {
+           username nexusUsername
+           password nexusPassword
+           
+        }
+
+       
+    }
+} // ends task: repositories
+dependencies {
+  implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-tomcat', version: '2.5.5'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.13.0'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.13.0'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: '2.13.0'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-to-slf4j', version: '2.13.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.3.1'
+    compile group: 'org.springframework.boot', name: 'spring-boot-starter-json', version: '2.3.0.RELEASE'
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine:'
+    }
+
+
+
+    
+}
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId = group
+            artifactId = archivesBaseName
+            version = version
+            from components.java
+            versionMapping {
+                usage('java-api') {
+                    fromResolutionOf('runtimeClasspath')
+                }
+                usage('java-runtime') {
+                    fromResolutionResult()
+                }
+            }
+            pom {
+                name = rootProject.name
+                description = 'This is the integration service in counter party responsible for email verifications.'
+                licenses {
+                    license {
+                        name = "IKANO BANK License, Version ${version}"
+                        url = 'https://ikanobank.se/'
+                    }
+                }
+                /*
+                    this node need to be verified by internally within team, to check what values should be here.
+                    for now consider these values as temp
+                */
+                developers {
+                    developer {
+                        id = 'test'
+                        name = 'test'
+                        email = 'test@ikano.se'
+                    }
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            def releasesRepoUrl = "https://artifacts.le.tnt.bank.ikano/repository/maven-releases/"
+            def snapshotsRepoUrl = "https://artifacts.le.tnt.bank.ikano/repository/maven-snapshots/"
+            credentials {
+                username nexusUsername
+               password nexusPassword
+            }
+            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+        }
+    }
+}
+jacocoTestReport {
+    reports {
+        csv.enabled false
+        xml.enabled true
+        html.destination file("${buildDir}/jacocoHtml")
+    }
+}
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.0 // change this value as per the recommended code coverage
+            }
+        }
+    }
+}
+check.dependsOn jacocoTestCoverageVerification
+
+test {
+    useJUnitPlatform()
+}
