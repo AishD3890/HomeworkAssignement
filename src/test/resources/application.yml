@@ -1,0 +1,44 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /nlp-websocketservice
+spring:
+  profiles:
+    active: test
+  application:
+    name: nlp-websocketservice
+
+producer:
+  bootstrap:
+    servers:
+      address: kafka.eem.dev.bank.ikano:9092
+  kafka:
+    linger:
+      in:
+        ms: 0
+    idempotent:
+      producer: false
+    max:
+      in:
+        flight:
+          request:
+            per:
+              connection: 1
+    retries: 1
+ssl:
+  security:
+    protocol: SSL
+  truststore:
+    location: kafka.client.truststore.jks
+    password: confluent
+  key:
+    password: confluent
+  keystore:
+    location: kafka.client.keystore.jks
+    password: confluent
+  enabled:
+    protocols: TLSv1.2
+ccloud:
+    flag: false
+responseEventProcessor:
+  requestUrl: http://a7a6d5c0b00bc458c8a2e0a3a646ce43-aecd3a5e4323925d.elb.eu-central-1.amazonaws.com/nlp-response-event-processor/processResponseEvent

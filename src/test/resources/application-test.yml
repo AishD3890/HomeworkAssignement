@@ -1,0 +1,64 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /kafka-test-client
+spring:
+  application:
+    name: kafka-test-client
+producer:
+  bootstrap:
+    servers:
+      address: kafka.eem.dev.bank.ikano:9092
+  kafka:
+    linger:
+      in:
+        ms: 0
+    idempotent:
+      producer: false
+    max:
+      in:
+        flight:
+          request:
+            per:
+              connection: 1
+    retries: 1
+consumer:
+  topics: ikano.test.topic,ikano.test.topic.json,ikano.test.topic2,ikano.test.topic3
+  schema:
+    registry:
+      url: http://127.0.0.1:8081
+  bootstrap:
+    servers:
+      address: kafka.eem.dev.bank.ikano:9092
+  groupid: eem-test
+    deserializer:
+      key: string
+      value: string
+  offset:
+    reset: earliest
+  auto:
+    commit: false
+  test:
+    flag: false
+  interceptor:
+    flag: false
+
+ssl:
+  security:
+    protocol: SSL
+  truststore:
+    location: kafka.client.truststore.jks
+    password: confluent
+  key:
+    password: confluent
+  keystore:
+    location: kafka.client.keystore.jks
+    password: confluent
+  enabled:
+    protocols: TLSv1.2
+ccloud:
+  flag: false
+
+
+
+
